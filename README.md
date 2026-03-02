@@ -39,7 +39,7 @@ python -m pip install scapy
 ```
 ---
 
-##Usage
+## Usage
 
 Run the sniffer:
 
@@ -55,7 +55,7 @@ Press CTRL+C to stop the sniffer
 
 ---
 
-##Ethical Disclaimer
+## Ethical Disclaimer
 
 - This tool is intended strictly for:
 
@@ -69,7 +69,7 @@ Press CTRL+C to stop the sniffer
 
 ---
 
-##Author
+## Author
 
 Phillip Kasolia
 
