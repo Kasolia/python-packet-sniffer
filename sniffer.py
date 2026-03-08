@@ -1,31 +1,57 @@
-# sniffer.py
 """
-Python Packet Sniffer - Phase 2
+Python Packet Sniffer - Phase 2 (Professional Edition)
 Author: Phillip Kasolia
 Description:
-Enhanced packet sniffer with interface selection, filtering,
-basic protocol detection, and optional logging.
+Asynchronous packet sniffer with interface selection,
+kernel-level filtering (BPF), protocol detection,
+and optional persistent logging.
 """
 
 import argparse
+import time
+from datetime import datetime
 from scapy.all import AsyncSniffer, get_if_list
 from scapy.layers.inet import IP, TCP, UDP
-from datetime import datetime
 
 
-def detect_application_protocol(port):
+# --------------------------------------------------
+# Application Protocol Detection
+# --------------------------------------------------
+
+def detect_application_protocol(port: int) -> str:
     common_ports = {
         80: "HTTP",
         443: "HTTPS",
         53: "DNS",
         21: "FTP",
         22: "SSH",
-        25: "SMTP"
+        25: "SMTP",
+        5228: "Google Services"
     }
     return common_ports.get(port, "Unknown")
 
 
-def packet_callback(packet, args):
+# --------------------------------------------------
+# BPF Filter Builder (Kernel-Level Filtering)
+# --------------------------------------------------
+
+def build_bpf_filter(args) -> str | None:
+    filters = []
+
+    if args.protocol:
+        filters.append(args.protocol.lower())
+
+    if args.port:
+        filters.append(f"port {args.port}")
+
+    return " and ".join(filters) if filters else None
+
+
+# --------------------------------------------------
+# Packet Processing
+# --------------------------------------------------
+
+def packet_callback(packet, args, log_file):
     if not packet.haslayer(IP):
         return
 
@@ -42,17 +68,10 @@ def packet_callback(packet, args):
     else:
         return
 
-    # Protocol filter
-    if args.protocol and proto.lower() != args.protocol.lower():
-        return
-
-    # Port filter
-    if args.port and args.port not in (sport, dport):
-        return
-
-    app_proto = detect_application_protocol(sport) \
-        if detect_application_protocol(sport) != "Unknown" \
-        else detect_application_protocol(dport)
+    # Application protocol detection
+    app_proto = detect_application_protocol(sport)
+    if app_proto == "Unknown":
+        app_proto = detect_application_protocol(dport)
 
     output = (
         f"[{timestamp}] {proto} | {app_proto}\n"
@@ -62,50 +81,73 @@ def packet_callback(packet, args):
 
     print(output)
 
-    if args.log:
-        with open(args.log, "a") as f:
-            f.write(output + "\n")
+    if log_file:
+        log_file.write(output + "\n")
+        log_file.flush()
 
 
+# --------------------------------------------------
+# Main Execution
+# --------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Enhanced Packet Sniffer")
+    parser = argparse.ArgumentParser(description="Asynchronous Packet Sniffer")
     parser.add_argument("--interface", type=int, help="Interface number to sniff on")
-    parser.add_argument("--protocol", help="Filter by protocol (tcp/udp)")
+    parser.add_argument("--protocol", choices=["tcp", "udp"], help="Filter by protocol")
     parser.add_argument("--port", type=int, help="Filter by port number")
     parser.add_argument("--log", help="Log output to file")
 
     args = parser.parse_args()
     interfaces = get_if_list()
 
+    # Show interfaces if none selected
     if args.interface is None:
         print("Available Interfaces:")
         for idx, iface in enumerate(interfaces):
             print(f"{idx}: {iface}")
         return
 
+    # Validate interface
     try:
         selected_iface = interfaces[args.interface]
     except IndexError:
         print("Invalid interface number.")
         return
 
-    print(f"Sniffing on {selected_iface}... Press CTRL+C to stop.\n")
+    # Setup logging
+    log_file = open(args.log, "a") if args.log else None
+
+    # Build kernel-level filter
+    bpf_filter = build_bpf_filter(args)
 
     sniffer = AsyncSniffer(
         iface=selected_iface,
-        prn=lambda packet: packet_callback(packet, args),
+        prn=lambda pkt: packet_callback(pkt, args, log_file),
+        filter=bpf_filter,
         store=False
     )
 
-    sniffer.start()
+    print(f"Sniffing on {selected_iface}")
+    if bpf_filter:
+        print(f"Using BPF filter: {bpf_filter}")
+    print("Press CTRL+C to stop.\n")
 
     try:
+        sniffer.start()
+
+        # Idle loop (low CPU)
         while True:
-            pass
+            time.sleep(1)
+
     except KeyboardInterrupt:
+        print("\nStopping sniffer...")
         sniffer.stop()
-        print("\nSniffer stopped gracefully.")
+
+        if log_file:
+            log_file.close()
+
+        print("Sniffer stopped gracefully.")
+
 
 if __name__ == "__main__":
     main()
