@@ -165,11 +165,11 @@ Captured traffic will be written to **traffic.log**.
 
 ## Example Output
 
-```
-[2026-03-02 20:40:00] TCP | HTTPS
-  192.168.1.2:52985  -->  104.18.39.21:443
-------------------------------------------------------------
-```
+## Screenshots
+
+### Live Packet Capture
+
+![Packet Sniffer Output](screenshots/sniffer-output.png)
 
 ---
 
