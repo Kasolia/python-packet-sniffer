@@ -165,8 +165,6 @@ Captured traffic will be written to **traffic.log**.
 
 ## Example Output
 
-## Screenshots
-
 ### Live Packet Capture
 
 ![Packet Sniffer Output](screenshots/sniffer-output.png)
