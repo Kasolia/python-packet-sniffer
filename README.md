@@ -2,36 +2,64 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
-# Python Packet Sniffer – Phase 2
+# Python Packet Sniffer – Phase 3
 
 ## Overview
 
-Phase 2 enhances the original packet sniffer by introducing a more efficient and scalable architecture. The sniffer now uses asynchronous packet capture, kernel-level filtering, and improved logging to provide a more reliable and professional monitoring tool.
+This project is a Python-based network packet sniffer built using the Scapy library.  
+It captures live network traffic and performs basic analysis of packets in real time.
 
-The goal of this phase was to transform the Phase 1 prototype into a structured and efficient packet analysis utility suitable for security research and network troubleshooting.
+Phase 3 extends the previous versions by introducing **traffic analytics and monitoring capabilities**, allowing the tool to summarize captured traffic statistics such as packet rates, protocol distribution, and top communicating hosts.
+
+The goal of the project is to demonstrate practical understanding of:
+
+- Network packet capture
+- Protocol inspection
+- Kernel-level packet filtering (BPF)
+- Asynchronous packet processing
+- Traffic monitoring and analytics
 
 ---
 
-## Key Improvements from Phase 1
+## Phase 3 Improvements
 
-Phase 2 focuses on performance, stability, and usability.
+Phase 3 introduces real-time traffic monitoring features that transform the packet sniffer into a lightweight network analysis tool.
 
-### Asynchronous Packet Capture
+### Traffic Statistics
 
-The sniffer now uses Scapy's `AsyncSniffer` instead of the blocking `sniff()` function.  
-This allows the program to run packet capture in a background thread and respond instantly to shutdown signals.
+The sniffer now tracks:
 
-### Kernel-Level Packet Filtering
+- Total packets captured
+- Packets per second
+- Protocol distribution (TCP, UDP, Other)
+- Top source IP addresses
+- Top destination IP addresses
 
-Protocol and port filters are now applied using **Berkeley Packet Filter (BPF)** syntax at the capture level.
+### Traffic Analytics on Shutdown
 
-Example filter:
+When the sniffer stops (CTRL+C), it prints a traffic summary including protocol usage and the most active network hosts.
 
-```bash
-tcp and port 443
+Example:
+
 ```
+===== Traffic Statistics =====
 
-This significantly reduces unnecessary packet processing in user space.
+Total Packets: 387
+Packets/sec: 19.7
+
+Protocol Distribution
+TCP: 240
+UDP: 120
+OTHER: 27
+
+Top Source IPs
+192.168.1.4 → 110
+192.168.1.7 → 75
+
+Top Destination IPs
+142.250.190.78 → 95
+104.18.39.21 → 60
+```
 
 ### Persistent Logging
 
@@ -53,15 +81,18 @@ An idle loop with controlled sleep intervals prevents the sniffer from consuming
 
 ## Features
 
-- Live packet capture
-- TCP and UDP traffic detection
-- Interface selection via CLI
-- Protocol filtering (`tcp`, `udp`)
-- Port-based filtering
-- Application protocol identification (common ports)
-- Asynchronous packet capture
-- Optional traffic logging
-- Graceful shutdown support
+- Live packet capture using Scapy
+- Asynchronous packet sniffing (`AsyncSniffer`)
+- Network interface selection
+- Kernel-level filtering with BPF
+- Protocol filtering (TCP / UDP)
+- Port-based traffic filtering
+- Application protocol detection (common ports)
+- Persistent logging to file
+- Graceful shutdown handling
+- Real-time traffic statistics
+- Protocol distribution analysis
+- Top source/destination IP tracking
 
 ---
 
@@ -208,18 +239,25 @@ These features are planned for future phases.
 
 ---
 
-## Phase 3 Roadmap
+## Development Phases
 
-The next phase of the project will focus on expanding the sniffer into a lightweight monitoring tool with advanced analysis capabilities.
+### Phase 1
+Basic synchronous packet sniffer.
 
-Planned improvements include:
+### Phase 2
+Architecture improvements including:
 
-- Network flow tracking
+- Asynchronous packet capture
+- Kernel-level filtering
+- CLI argument support
+- Persistent logging
+
+### Phase 3
+Traffic analytics and monitoring:
+
 - Packet rate monitoring
-- Basic anomaly detection
-- JSON-based structured logging
-- Traffic statistics
-- Modular architecture
+- Protocol distribution statistics
+- Top network hosts analysis
 
 ---
 
