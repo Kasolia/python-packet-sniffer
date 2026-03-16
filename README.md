@@ -301,7 +301,7 @@ Traffic analytics and monitoring:
 - Protocol distribution statistics
 - Top network hosts analysis
 
-###Phase 4 – Intrusion Detection
+### Phase 4 – Intrusion Detection
 
 -Port scan detection
 -Brute force detection
