@@ -1,5 +1,5 @@
 """
-Python Packet Sniffer - Phase 2 (Professional Edition)
+Python Packet Sniffer - Phase 4 (Intrusion Detection Edition)
 Author: Phillip Kasolia
 Description:
 Asynchronous packet sniffer with interface selection,
@@ -9,16 +9,24 @@ and optional persistent logging.
 
 import argparse
 import time
+import threading
 from datetime import datetime
 from scapy.all import AsyncSniffer, get_if_list
 from scapy.layers.inet import IP, TCP, UDP
 
 
 # --------------------------------------------------
+# Real-Time Traffic Monitoring
+# --------------------------------------------------
+
+packet_rate_counter = 0
+
+
+# --------------------------------------------------
 # Phase 3 Imports (Traffic Statistics)
 # --------------------------------------------------
 
-from collections import defaultdict
+from collections import defaultdict, deque
 
 
 # --------------------------------------------------
@@ -31,6 +39,53 @@ src_ip_stats = defaultdict(int)
 dst_ip_stats = defaultdict(int)
 
 start_time = time.time()
+
+
+# --------------------------------------------------
+# Phase 4 Security Detection Structures
+# --------------------------------------------------
+
+port_scan_tracker = defaultdict(set)
+connection_attempts = defaultdict(int)
+packet_timestamps = deque()
+
+
+# --------------------------------------------------
+# Phase 4 Threat Detection
+# --------------------------------------------------
+
+def detect_threats(packet, sport, dport):
+    src_ip = packet[IP].src
+
+    # ---- Port Scan Detection ----
+    port_scan_tracker[src_ip].add(dport)
+
+    if len(port_scan_tracker[src_ip]) == 10:
+        print("\n" + "="*50)
+        print("[SECURITY ALERT] Possible Port Scan Detected")
+        print("="*50)
+        print(f"Source IP: {src_ip}")
+        print(f"Ports scanned: {sorted(port_scan_tracker[src_ip])}\n")
+
+    # ---- Brute Force Detection ----
+    key = f"{src_ip}:{dport}"
+    connection_attempts[key] += 1
+
+    if connection_attempts[key] > 15:
+        print("\n[ALERT] Possible Brute Force Attempt")
+        print(f"Source IP: {src_ip}")
+        print(f"Target Port: {dport}\n")
+
+    # ---- Traffic Spike Detection ----
+    current_time = time.time()
+    packet_timestamps.append(current_time)
+
+    # remove packets older than 5 seconds
+    while packet_timestamps and current_time - packet_timestamps[0] > 5:
+        packet_timestamps.popleft()
+
+    if len(packet_timestamps) > 100:
+        print("\n[ALERT] Unusual Traffic Spike Detected\n")
 
 
 # --------------------------------------------------
@@ -72,11 +127,13 @@ def build_bpf_filter(args) -> str | None:
 
 def packet_callback(packet, args, log_file):
     global packet_count
+    global packet_rate_counter
 
     if not packet.haslayer(IP):
         return
 
     packet_count += 1
+    packet_rate_counter += 1
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -104,6 +161,9 @@ def packet_callback(packet, args, log_file):
     app_proto = detect_application_protocol(sport)
     if app_proto == "Unknown":
         app_proto = detect_application_protocol(dport)
+
+    # Phase 4 threat detection
+    detect_threats(packet, sport, dport)
 
     output = (
 
@@ -145,6 +205,24 @@ def show_statistics():
     top_dst = sorted(dst_ip_stats.items(), key=lambda x: x[1], reverse=True)[:5]
     for ip, count in top_dst:
         print(f"{ip} → {count}")
+
+
+# --------------------------------------------------
+# Real-Time Traffic Rate Monitor
+# --------------------------------------------------
+
+def monitor_traffic_rate():
+    global packet_rate_counter
+
+    while True:
+        time.sleep(1)
+
+        rate = packet_rate_counter
+        packet_rate_counter = 0
+
+        if rate > 0:
+            print(f"[Traffic Rate] {rate} packets/sec")
+
 
 
 # --------------------------------------------------
@@ -195,6 +273,10 @@ def main():
 
     try:
         sniffer.start()
+
+        # Start traffic monitoring thread
+        monitor_thread = threading.Thread(target=monitor_traffic_rate, daemon=True)
+        monitor_thread.start()
 
         # Idle loop (low CPU)
         while True:
