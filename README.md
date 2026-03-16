@@ -303,10 +303,10 @@ Traffic analytics and monitoring:
 
 ### Phase 4 – Intrusion Detection
 
--Port scan detection
--Brute force detection
--Traffic spike detection
--Security alert system
+- Port scan detection
+- Brute force detection
+- Traffic spike detection
+- Security alert system
 
 ---
 
