@@ -10,6 +10,7 @@ and optional persistent logging.
 import argparse
 import time
 import threading
+import json
 from datetime import datetime
 from scapy.all import AsyncSniffer, get_if_list
 from scapy.layers.inet import IP, TCP, UDP
@@ -51,6 +52,22 @@ packet_timestamps = deque()
 
 
 # --------------------------------------------------
+# Phase 5 JSON Security Logging
+# --------------------------------------------------
+
+def log_security_event(event_type, data, logfile="alerts.json"):
+
+    event = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "event": event_type,
+        "details": data
+    }
+
+    with open(logfile, "a") as f:
+        f.write(json.dumps(event) + "\n")
+
+
+# --------------------------------------------------
 # Phase 4 Threat Detection
 # --------------------------------------------------
 
@@ -61,9 +78,17 @@ def detect_threats(packet, sport, dport):
     port_scan_tracker[src_ip].add(dport)
 
     if len(port_scan_tracker[src_ip]) == 10:
-        print("\n" + "="*50)
+        log_security_event(
+            "Port Scan Detected",
+            {
+                "source_ip": src_ip,
+                "ports": list(port_scan_tracker[src_ip])
+            }
+        )
+
+        print("\n" + "=" * 50)
         print("[SECURITY ALERT] Possible Port Scan Detected")
-        print("="*50)
+        print("=" * 50)
         print(f"Source IP: {src_ip}")
         print(f"Ports scanned: {sorted(port_scan_tracker[src_ip])}\n")
 
@@ -72,6 +97,15 @@ def detect_threats(packet, sport, dport):
     connection_attempts[key] += 1
 
     if connection_attempts[key] > 15:
+        log_security_event(
+            "Brute Force Attempt",
+            {
+                "source_ip": src_ip,
+                "target_port": dport,
+                "attempts": connection_attempts[key]
+            }
+        )
+
         print("\n[ALERT] Possible Brute Force Attempt")
         print(f"Source IP: {src_ip}")
         print(f"Target Port: {dport}\n")
@@ -79,12 +113,20 @@ def detect_threats(packet, sport, dport):
     # ---- Traffic Spike Detection ----
     current_time = time.time()
     packet_timestamps.append(current_time)
-
-    # remove packets older than 5 seconds
+    
+    #Remove packets older than 5 seconds
     while packet_timestamps and current_time - packet_timestamps[0] > 5:
         packet_timestamps.popleft()
 
     if len(packet_timestamps) > 100:
+        log_security_event(
+            "Traffic Spike",
+            {
+                "packet_rate_window": len(packet_timestamps),
+                "window_seconds": 5
+            }
+        )
+
         print("\n[ALERT] Unusual Traffic Spike Detected\n")
 
 

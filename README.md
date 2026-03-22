@@ -2,7 +2,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
-# Python Packet Sniffer – Phase 4 (Intrusion Detection Edition)
+# Python Packet Sniffer – Phase 5 (Network Monitoring & IDS)
 
 ## Overview
 
@@ -11,7 +11,7 @@ It captures live network traffic, analyzes packets in real time, and performs ba
 
 The project was developed in multiple phases to demonstrate progressive improvements in architecture, monitoring capabilities, and security analysis.
 
-Phase 4 expands the tool into a **lightweight Network Intrusion Detection System (NIDS)** capable of identifying suspicious traffic patterns such as port scans, brute-force attempts, and abnormal traffic spikes.
+Phase 5 expands the tool into a **lightweight Network Intrusion Detection System (NIDS)** capable of identifying suspicious traffic patterns such as port scans, brute-force attempts, and abnormal traffic spikes.
 
 This project demonstrates practical knowledge of:
 
@@ -20,7 +20,8 @@ This project demonstrates practical knowledge of:
 - Kernel-level packet filtering (BPF)
 - Asynchronous packet processing
 - Traffic analytics
-- Basic intrusion detection techniques
+- Intrusion detection techniques
+- Structured security event logging
 
 ---
 
@@ -55,9 +56,75 @@ The sniffer monitors repeated attempts to the same port from a single IP address
 Example alert:
 
 ```
-[ALERT] Unusual Traffic Spike Detected
+[ALERT] Possible Brute Force Attempt
+
+Source IP: 192.168.1.5
+Target Port: 22
+```
+
+---
+
+### Traffic Spike Detection
+
+In addition to intrusion detection, the tool provides real-time traffic analytics.
+
+Tracked metrics include:
+
+- Total packets captured
+- Packets per second
+- Protocol distribution
+- Top source IP addresses
+- Top destination IP addresses
+
+Example alert:
 
 ```
+[ALERT] Unusual Traffic Spike Detected
+```
+
+---
+
+# Phase 5 Improvements
+
+Phase 5 adds **real-time monitoring and structured security logging**.
+
+### Real-Time Traffic Rate Monitoring
+
+The sniffer now displays **live packet rates while running**.
+
+Example:
+
+```
+[Traffic Rate] 12 packets/sec
+```
+This allows users to detect sudden traffic increases in real time.
+
+---
+
+### Structured JSON Security Event Logging
+
+Security alerts are now written to a structured log file:
+
+alerts.json
+
+Example event:
+
+```
+{
+  "timestamp": "2026-03-16 14:10:22",
+  "event": "Port Scan Detected",
+  "details": {
+    "source_ip": "192.168.1.5",
+    "ports": [22, 80, 443]
+  }
+}
+
+```
+Structured logging makes it possible to integrate this tool with SIEM systems such as:
+
+- Splunk
+- Elastic Stack
+- Graylog
 
 ---
 
@@ -117,6 +184,7 @@ Top Destination IPs
 - Port scan detection
 - Brute force attempt detection
 - Traffic spike detection
+- JSON security event logging
 
 ---
 
@@ -141,13 +209,13 @@ python-packet-sniffer/
 - Scapy
 - Npcap (Windows)
 
-Install Scapy:
+### Install Scapy:
 
 ```bash
 pip install scapy
 ```
 
-Install Npcap
+### Install Npcap
 
 Npcap is required for packet capture on Windows.
 
@@ -273,7 +341,6 @@ Future improvements may include:
 -Deep packet inspection
 -PCAP export functionality
 -Advanced anomaly detection
--JSON security event logging
 -Real-time monitoring dashboard
 
 These features are planned for future phases.
@@ -307,6 +374,12 @@ Traffic analytics and monitoring:
 - Brute force detection
 - Traffic spike detection
 - Security alert system
+
+### Phase 5 – Monitoring & Security Logging
+
+- Real-time traffic rate monitoring
+- JSON security event logging
+- Structured alert generation
 
 ---
 
