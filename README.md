@@ -193,11 +193,24 @@ Top Destination IPs
 ```
 python-packet-sniffer/
 │
-├── sniffer.py
+├── core/
+│ ├── capture.py # Packet processing & callback logic
+│ └── filters.py # BPF filter builder (kernel-level)
+│
+├── analytics/
+│ ├── stats.py # Packet counters & traffic statistics
+│ └── monitor.py # Real-time traffic rate monitoring
+│
+├── detection/
+│ └── threats.py # Intrusion detection logic (port scan, brute force, traffic spike)
+│
+├── utils/
+│ └── logger.py # JSON security logging
+│
+├── sniffer.py # Main executable
+├── requirements.txt # Dependencies
 ├── README.md
-├── README_phase1.md
-├── requirements.txt
-└── screenshots/
+└── screenshots/ # Optional: add screenshots of sniffer in action
 └── sniffer-output.png
 ```
 
